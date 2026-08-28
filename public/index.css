@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@300;400;600;700&display=swap');
+
+:root {
+--bg-deep: #08101a;
+--bg-panel: rgba(20, 30, 45, 0.85);
+--text-primary: #e1e1e6;
+--accent-gold: #c49a6c;
+--border-line: #2a405e;
+--defense: #34d399;
+--defense-bg: rgba(52, 211, 153, 0.1);
+--prosecution: #f87171;
+--prosecution-bg: rgba(248, 113, 113, 0.1);
+--judge: #fba94c;
+--system-text: #64748b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: var(--bg-deep);
+    background-image: radial-gradient(circle at center, #0f1b2b 0%, var(--bg-deep) 70%);
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    padding: 20px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-base);
+}
+
+body {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-main);
+  overflow-x: hidden; /* Evita rolagem horizontal por conta da animação do fundo */
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -5%;
+  left: -10%;
+  width: 120%;
+  height: 110%;
+  background: url('tribunal.png') no-repeat center center;
+  background-size: cover;
+  filter: blur(8px) brightness(0.65);
+  z-index: -1;
+  animation: moverFundo 60s ease-in-out infinite alternate;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  width: 95%;
+  max-width: 750px;
+  padding: 15px;
+}
+
+.escondido {
+    display: none !important;
+}
+
+.container {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+}
+
+.screen { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
+.screen.active { display: block; opacity: 1; }
+
+    h1, h2 {
+        font-family: 'Cinzel', serif;
+        color: #fff;
+        letter-spacing: 1px;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    h1 { font-size: 2.5rem; text-align: center; }
+    #screen-menu h1::before {
+        content: '⚖️';
+        display: block;
+        font-size: 3.5rem;
+        margin-bottom: 10px;
+        animation: gavelKnock 3s ease-in-out infinite;
+    }
+
+@keyframes gavelKnock {
+        0%, 100% { transform: rotate(-5deg); }
+        50% { transform: rotate(10deg) translateY(-5px); }
+    }
+
+    h3 { font-size: 1.5rem; margin-bottom: 10px; color: var(--accent-gold); }
+    h4 { font-size: 1.2rem; font-weight: 400; color: var(--text-primary); }
+
+input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-line);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s;
+    }
+
+    input:focus { outline: none; border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(196, 154, 108, 0.1); }
+    ::placeholder { color: var(--system-text); opacity: 0.7; }
+
+    button {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, var(--accent-gold) 0%, #a37e56 100%);
+        border: none;
+        border-radius: 8px;
+        color: #000;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px -5px rgba(196, 154, 108, 0.5);
+    }
+
+button:hover { transform: translateY(-1px); background: linear-gradient(135deg, #d4aa7c 0%, var(--accent-gold) 100%); }
+
+    .room-list {
+        max-height: 180px;
+        overflow-y: auto;
+        border: 1px solid var(--border-line);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 25px;
+        background: rgba(0,0,0,0.2);
+    }
+
+    .room-item {
+        padding: 12px 15px;
+        background: rgba(255,255,255,0.03);
+        margin-bottom: 6px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        transition: background 0.2s;
+        border-left: 3px solid transparent;
+    }
+
+    .room-item:hover { background: rgba(196, 154, 108, 0.1); border-left: 3px solid var(--accent-gold); }
+
+    .case-box {
+        background: rgba(0,0,0,0.3);
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        border-left: 5px solid var(--accent-gold);
+    }
+
+    .case-box p { margin-bottom: 15px; line-height: 1.7; font-size: 1.05rem; color: rgba(225, 225, 230, 0.9); }
+    .label-info { color: var(--accent-gold); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 4px; font-weight: 600; }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 450px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-line);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+.message { padding: 12px 16px; border-radius: 8px; max-width: 85%; font-size: 0.95rem; line-height: 1.6; word-wrap: break-word; }
+
+.msg-defesa { background-color: var(--defense-bg); color: var(--defense); align-self: flex-start; border: 1px solid rgba(52, 211, 153, 0.3); }
+.msg-defesa strong { color: var(--defense); }
+
+.msg-acusacao { background-color: var(--prosecution-bg); color: var(--prosecution); align-self: flex-start; border: 1px solid rgba(248, 113, 113, 0.3); }
+.msg-acusacao strong { color: var(--prosecution); }
+
+.msg-juiz { background-color: rgba(251, 169, 76, 0.1); color: var(--judge); align-self: center; width: 100%; text-align: center; border: 1px solid rgba(251, 169, 76, 0.3); }
+.msg-juiz strong { color: var(--judge); }
+
+.msg-sistema { align-self: center; width: auto; text-align: center; color: var(--system-text); font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 4px; }
+
+.chat-input-area { display: flex; gap: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-line); }
+.chat-input-area input { margin-bottom: 0; padding: 12px; }
+.chat-input-area button { width: 100px; margin-bottom: 0; padding: 12px; font-size: 1rem; }
+
+.papel-badge { text-align: center; font-weight: 700; margin-bottom: 15px; padding: 8px; border-radius: 6px; font-size: 0.9rem; text-transform: uppercase; background: rgba(52, 211, 153, 0.15); color: var(--defense); }

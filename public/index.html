@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <title>⚖️ Tribunal Virtual — Julgamento Online</title>
+</head>
+<body>
+
+        <div class="container">
+        <!-- TELA 1: MENU -->
+        <div id="screen-menu" class="screen active">
+            <h1>Tribunal Virtual</h1>
+            <input type="text" id="nickname" placeholder="Digite seu Nickname..." autocomplete="off">
+            <input type="text" id="roomNameInput" placeholder="Nome da Sala a criar..." autocomplete="off">
+            <button onclick="criarSala()">Criar Nova Sala</button>
+            
+            <p style="margin: 25px 0 10px 0; font-size: 0.9rem; color: var(--system-text);">Salas Disponíveis:</p>
+            <div class="room-list" id="roomList"></div>
+        </div>
+
+        <!-- TELA 2: CASO -->
+        <div id="screen-case" class="screen">
+            <h2>Cenário do Caso</h2>
+            <div class="case-box">
+                <span class="label-info">Tema Central:</span>
+                <h3 id="themeTitle"></h3>
+                
+                <span class="label-info" style="margin-top: 15px;">Título do Cenário:</span>
+                <h4 id="caseTitle"></h4>
+                
+                <span class="label-info" style="margin-top: 15px;">Descrição Completa:</span>
+                <p id="caseDescription"></p>
+            </div>
+            <button onclick="irParaChat()">Iniciar Julgamento</button>
+        </div>
+
+        <!-- TELA 3: CHAT COM BOTS -->
+        <div id="screen-chat" class="screen">
+            <h2 id="chatRoomTitle" style="font-size: 1.1rem; margin-bottom: 5px; text-align: center;"></h2>
+            <div class="papel-badge">Você é a DEFESA (🟢 Verde)</div>
+            
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="userInput" placeholder="Digite sua defesa..." onkeypress="handleKeyPress(event)">
+                    <button onclick="enviarMensagem()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de lógica local e bots de julgamento -->
+    <script>
+        let currentUser = "";
+        let currentRoom = "";
+        let currentCase = {};
+
+        const casosBanco = [
+            {
+                tema: "Inteligência Artificial e Arte",
+                titulo: "O Caso da IA Plagiadora",
+                texto: "Um artista plástico famoso acusa uma empresa de inteligência artificial de roubar seu estilo artístico para gerar pinturas automatizadas que venceram um prêmio de arte nacional."
+            },
+            {
+                tema: "Trânsito e Tecnologia",
+                titulo: "O Dilema do Carro Autônomo",
+                texto: "Um veículo autônomo atropelou um pedestre que atravessou a rua fora da faixa olhando para o smartphone, desviando para a calçada para evitar algo pior."
+            }
+        ];
+
+        function criarSala() {
+            const nick = document.getElementById("nickname").value.trim();
+            const nomeSala = document.getElementById("roomNameInput").value.trim();
+            if (!nick || !nomeSala) {
+                alert("Preencha seu nick e o nome da sala!");
+                return;
+            }
+            currentUser = nick;
+            currentRoom = nomeSala;
+
+            // Sorteia um caso
+            currentCase = casosBanco[Math.floor(Math.random() * casosBanco.length)];
+            
+            preencherCaso(currentCase);
+            mudarTela("screen-case");
+        }
+
+        function preencherCaso(caso) {
+            document.getElementById("themeTitle").innerText = caso.tema;
+            document.getElementById("caseTitle").innerText = caso.titulo;
+            document.getElementById("caseDescription").innerText = caso.texto;
+        }
+
+        function irParaChat() {
+            mudarTela("screen-chat");
+            document.getElementById("chatRoomTitle").innerText = `Sala: ${currentRoom} — Tema: ${currentCase.tema}`;
+            
+            // Inicia o diálogo automático dos bots
+            iniciarBotsJulgamento();
+        }
+
+        function adicionarMensagemChat(autor, texto, tipo) {
+            const chatMessages = document.getElementById("chatMessages");
+            const div = document.createElement("div");
+            
+            if (tipo === 'defesa') {
+                div.className = "message msg-defesa";
+                div.innerHTML = `<strong>🟢 [Defesa] ${autor}:</strong> ${texto}`;
+            } else if (tipo === 'acusacao') {
+                div.className = "message msg-acusacao";
+                div.innerHTML = `<strong>🔴 [Acusação (Bot)]:</strong> ${texto}`;
+            } else if (tipo === 'juiz') {
+                div.className = "message msg-juiz";
+                div.innerHTML = `<strong>⚖️ [Juiz (Bot)]:</strong> ${texto}`;
+            }
+
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function iniciarBotsJulgamento() {
+            const chatMessages = document.getElementById("chatMessages");
+            chatMessages.innerHTML = "";
+
+            setTimeout(() => {
+                adicionarMensagemChat("Sistema", "Sessão aberta. O tribunal está em ordem.", "juiz");
+            }, 500);
+
+            setTimeout(() => {
+                adicionarMensagemChat("Juiz", "Sejam bem-vindos. Vamos iniciar a análise do caso: " + currentCase.titulo + ". Com a palavra, a Acusação.", "juiz");
+            }, 1800);
+
+            setTimeout(() => {
+                adicionarMensagemChat("Acusação", "Excelência, as provas demonstram claramente a culpa. Os fatos falam por si e exigem uma punição exemplar!", "acusacao");
+            }, 3500);
+
+            setTimeout(() => {
+                adicionarMensagemChat("Juiz", `Compreendido. Com a palavra agora a Defesa (${currentUser}), para expor seus argumentos.`, "juiz");
+            }, 5000);
+        }
+
+        function enviarMensagem() {
+            const input = document.getElementById("userInput");
+            const texto = input.value.trim();
+            if (!texto) return;
+
+            // Envia a mensagem do usuário (Defesa - Verde)
+            adicionarMensagemChat(currentUser, texto, 'defesa');
+            input.value = "";
+
+            // Resposta automática do Juiz após o jogador argumentar
+            setTimeout(() => {
+                const respostasJuiz = [
+                    "Argumento registrado pela Defesa. A promotoria deseja contra-argumentar?",
+                    "O tribunal anotou a ponderação da Defesa. Prossiga com suas alegações.",
+                    "Interessante perspectiva apresentada pela Defesa. Vamos ouvir os desdobramentos."
+                ];
+                const respostaAleatoria = respostasJuiz[Math.floor(Math.random() * respostasJuiz.length)];
+                adicionarMensagemChat("Juiz", respostaAleatoria, "juiz");
+            }, 1500);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') enviarMensagem();
+        }
+
+        function mudarTela(id) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
+        }
+    </script>
+</body>
+</html>
