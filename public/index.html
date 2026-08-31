@@ -8,12 +8,25 @@
 </head>
 <body>
 
-        <div class="container">
+    <div class="container">
         <!-- TELA 1: MENU -->
         <div id="screen-menu" class="screen active">
             <h1>Tribunal Virtual</h1>
             <input type="text" id="nickname" placeholder="Digite seu Nickname..." autocomplete="off">
             <input type="text" id="roomNameInput" placeholder="Nome da Sala a criar..." autocomplete="off">
+            
+            <!-- SELEÇÃO DE AVATAR (FOTO DE PERFIL) -->
+            <div class="profile-selection">
+                <p style="font-size: 0.9rem; color: var(--system-text); margin-bottom: 8px;">Escolha seu Personagem:</p>
+                <div class="avatar-grid">
+                    <img src="icone-1.png" alt="Personagem 1" class="avatar-option selected" onclick="selectAvatar('icone-1.png', this)">
+                    <img src="icone-2.png" alt="Personagem 2" class="avatar-option" onclick="selectAvatar('icone-2.png', this)">
+                    <img src="icone-3.png" alt="Personagem 3" class="avatar-option" onclick="selectAvatar('icone-3.png', this)">
+                    <img src="icone-4.png" alt="Personagem 4" class="avatar-option" onclick="selectAvatar('icone-4.png', this)">
+                    <img src="icone-5.png" alt="Personagem 5" class="avatar-option" onclick="selectAvatar('icone-5.png', this)">
+                </div>
+            </div>
+
             <button onclick="criarSala()">Criar Nova Sala</button>
             
             <p style="margin: 25px 0 10px 0; font-size: 0.9rem; color: var(--system-text);">Salas Disponíveis:</p>
@@ -56,6 +69,7 @@
         let currentUser = "";
         let currentRoom = "";
         let currentCase = {};
+        let selectedAvatarImg = "icone-1.png"; // Avatar padrão inicial
 
         const casosBanco = [
             {
@@ -69,6 +83,16 @@
                 texto: "Um veículo autônomo atropelou um pedestre que atravessou a rua fora da faixa olhando para o smartphone, desviando para a calçada para evitar algo pior."
             }
         ];
+
+        function selectAvatar(imageName, element) {
+            selectedAvatarImg = imageName;
+            // Remove a classe 'selected' de todos os avatares
+            document.querySelectorAll('.avatar-option').forEach(img => {
+                img.classList.remove('selected');
+            });
+            // Adiciona no clicado
+            element.classList.add('selected');
+        }
 
         function criarSala() {
             const nick = document.getElementById("nickname").value.trim();
@@ -107,13 +131,21 @@
             
             if (tipo === 'defesa') {
                 div.className = "message msg-defesa";
-                div.innerHTML = `<strong>🟢 [Defesa] ${autor}:</strong> ${texto}`;
+                // Inclui a foto de perfil escolhida pelo jogador ao lado da mensagem dele
+                div.innerHTML = `
+                    <img src="${selectedAvatarImg}" alt="Avatar" class="chat-avatar">
+                    <div class="chat-text-content"><strong>🟢 [Defesa] ${autor}:</strong> ${texto}</div>
+                `;
             } else if (tipo === 'acusacao') {
                 div.className = "message msg-acusacao";
-                div.innerHTML = `<strong>🔴 [Acusação (Bot)]:</strong> ${texto}`;
+                div.innerHTML = `
+                    <div class="chat-text-content"><strong>🔴 [Acusação (Bot)]:</strong> ${texto}</div>
+                `;
             } else if (tipo === 'juiz') {
                 div.className = "message msg-juiz";
-                div.innerHTML = `<strong>⚖️ [Juiz (Bot)]:</strong> ${texto}`;
+                div.innerHTML = `
+                    <div class="chat-text-content"><strong>⚖️ [Juiz (Bot)]:</strong> ${texto}</div>
+                `;
             }
 
             chatMessages.appendChild(div);
