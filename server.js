@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const mongoose = require('mongoose');
 
 const app = express();
 const server = http.createServer(app);
@@ -8,7 +9,31 @@ const io = new Server(server);
 
 app.use(express.static('public'));
 
-// Banco de casos com Tema, Título e Texto do Cenário separados
+// Conexão com o MongoDB
+const uri = "mongodb+srv://adrianypaola3_db_user:garnica3456@cluster0.ucjygfm.mongodb.net/?appName=Cluster0";
+mongoose.connect(uri)
+.then(() => console.log('Conectado ao MongoDB Atlas com sucesso!'))
+.catch(err => console.error('Erro ao conectar ao MongoDB:', err));
+
+// Definição do Schema da Sala no MongoDB
+const salaSchema = new mongoose.Schema({
+    nomeSala: { type: String, required: true, unique: true },
+    criador: { type: String, required: true },
+    caso: {
+        tema: String,
+        titulo: String,
+        texto: String
+    },
+    jogadores: [{
+        id: String,
+        nick: String,
+        papel: String
+    }]
+});
+
+const Sala = mongoose.model('Sala', salaSchema);
+
+// Banco de casos estático para sorteio
 const casosBanco = [
     {
         tema: "Inteligência Artificial e Arte",
@@ -27,70 +52,102 @@ const casosBanco = [
     }
 ];
 
-const salas = {};
+// Função auxiliar para enviar a lista de salas atualizada para todos os conectados
+async function atualizarSalasParaTodos() {
+    const salasDoBanco = await Sala.find({});
+    const salasObj = {};
+    salasDoBanco.forEach(s => {
+        salasObj[s.nomeSala] = {
+            criador: s.criador,
+            caso: s.caso,
+            jogadores: s.jogadores
+        };
+    });
+    io.emit('atualizar_salas', salasObj);
+}
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log(`Usuário conectado: ${socket.id}`);
 
-    // Envia a lista de salas atualizada para quem conectar
-    socket.emit('atualizar_salas', salas);
+    // Envia a lista atualizada logo que conecta
+    await atualizarSalasParaTodos();
 
-    socket.on('criar_sala', ({ nomeSala, nick }) => {
-        if (salas[nomeSala]) {
-            socket.emit('erro', 'Esta sala já existe!');
-            return;
+    socket.on('criar_sala', async ({ nomeSala, nick }) => {
+        try {
+            const salaExiste = await Sala.findOne({ nomeSala });
+            if (salaExiste) {
+                socket.emit('erro', 'Esta sala já existe!');
+                return;
+            }
+
+            const casoSorteado = casosBanco[Math.floor(Math.random() * casosBanco.length)];
+
+            const novaSala = new Sala({
+                nomeSala,
+                criador: nick,
+                caso: casoSorteado,
+                jogadores: [{ id: socket.id, nick, papel: 'defesa' }]
+            });
+
+            await novaSala.save();
+
+            socket.join(nomeSala);
+            socket.emit('sala_criada', { nomeSala, caso: casoSorteado, papel: 'defesa' });
+            await atualizarSalasParaTodos();
+        } catch (error) {
+            console.error(error);
+            socket.emit('erro', 'Erro ao criar a sala.');
         }
-
-        // Sorteia o caso para a sala
-        const casoSorteado = casosBanco[Math.floor(Math.random() * casosBanco.length)];
-
-        salas[nomeSala] = {
-            criador: nick,
-            caso: casoSorteado,
-            jogadores: [{ id: socket.id, nick, papel: 'defesa' }] // O criador começa como Defesa (verde)
-        };
-
-        socket.join(nomeSala);
-        socket.emit('sala_criada', { nomeSala, caso: casoSorteado, papel: 'defesa' });
-        io.emit('atualizar_salas', salas);
     });
 
-    socket.on('entrar_sala', ({ nomeSala, nick }) => {
-        if (!salas[nomeSala]) {
-            socket.emit('erro', 'Sala não encontrada!');
-            return;
+    socket.on('entrar_sala', async ({ nomeSala, nick }) => {
+        try {
+            const sala = await Sala.findOne({ nomeSala });
+            if (!sala) {
+                socket.emit('erro', 'Sala não encontrada!');
+                return;
+            }
+
+            socket.join(nomeSala);
+
+            let papel = 'espectador';
+            if (sala.jogadores.length === 1) {
+                papel = 'acusacao';
+            }
+
+            sala.jogadores.push({ id: socket.id, nick, papel });
+            await sala.save();
+
+            socket.emit('entrou_na_sala', { nomeSala, caso: sala.caso, papel });
+            io.to(nomeSala).emit('mensagem_sistema', `${nick} entrou na sala.`);
+            await atualizarSalasParaTodos();
+        } catch (error) {
+            console.error(error);
         }
-
-        socket.join(nomeSala);
-        
-        // Define o papel do segundo jogador como Acusação (vermelho), ou espectador se já estiver cheio
-        let papel = 'espectador';
-        const numJogadores = salas[nomeSala].jogadores.length;
-        
-        if (numJogadores === 1) {
-            papel = 'acusacao';
-        }
-
-        salas[nomeSala].jogadores.push({ id: socket.id, nick, papel });
-
-        socket.emit('entrou_na_sala', { nomeSala, caso: salas[nomeSala].caso, papel });
-        io.to(nomeSala).emit('mensagem_sistema', `${nick} entrou na sala.`);
     });
 
     socket.on('enviar_mensagem', ({ nomeSala, nick, texto, papel }) => {
         io.to(nomeSala).emit('receber_mensagem', { nick, texto, papel });
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
         console.log(`Usuário desconectado: ${socket.id}`);
-        // Remove jogador das salas se necessário
-        for (let sala in salas) {
-            salas[sala].jogadores = salas[sala].jogadores.filter(j => j.id !== socket.id);
-            if (salas[sala].jogadores.length === 0) {
-                delete salas[sala];
+        try {
+            const salas = await Sala.find({ 'jogadores.id': socket.id });
+            
+            for (let sala of salas) {
+                sala.jogadores = sala.jogadores.filter(j => j.id !== socket.id);
+                
+                if (sala.jogadores.length === 0) {
+                    await Sala.deleteOne({ _id: sala._id });
+                } else {
+                    await sala.save();
+                }
             }
+            await atualizarSalasParaTodos();
+        } catch (error) {
+            console.error(error);
         }
-        io.emit('atualizar_salas', salas);
     });
 });
 

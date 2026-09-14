@@ -49,67 +49,113 @@
             <button onclick="irParaChat()">Iniciar Julgamento</button>
         </div>
 
-        <!-- TELA 3: CHAT COM BOTS -->
+        <!-- TELA 3: CHAT MULTIPLAYER -->
         <div id="screen-chat" class="screen">
             <h2 id="chatRoomTitle" style="font-size: 1.1rem; margin-bottom: 5px; text-align: center;"></h2>
-            <div class="papel-badge">Você é a DEFESA (🟢 Verde)</div>
+            <div class="papel-badge" id="papelBadge">Conectando...</div>
             
             <div class="chat-container">
                 <div class="chat-messages" id="chatMessages"></div>
                 <div class="chat-input-area">
-                    <input type="text" id="userInput" placeholder="Digite sua defesa..." onkeypress="handleKeyPress(event)">
+                    <input type="text" id="userInput" placeholder="Digite sua mensagem..." autocomplete="off" onkeypress="handleKeyPress(event)">
                     <button onclick="enviarMensagem()">Enviar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Script de lógica local e bots de julgamento -->
+    <!-- Importação obrigatória do Socket.io do Servidor -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Script de Integração com Servidor e Banco de Dados -->
     <script>
+        const socket = io();
+
         let currentUser = "";
         let currentRoom = "";
         let currentCase = {};
+        let meuPapel = "";
         let selectedAvatarImg = "icone-1.png"; // Avatar padrão inicial
-
-        const casosBanco = [
-            {
-                tema: "Inteligência Artificial e Arte",
-                titulo: "O Caso da IA Plagiadora",
-                texto: "Um artista plástico famoso acusa uma empresa de inteligência artificial de roubar seu estilo artístico para gerar pinturas automatizadas que venceram um prêmio de arte nacional."
-            },
-            {
-                tema: "Trânsito e Tecnologia",
-                titulo: "O Dilema do Carro Autônomo",
-                texto: "Um veículo autônomo atropelou um pedestre que atravessou a rua fora da faixa olhando para o smartphone, desviando para a calçada para evitar algo pior."
-            }
-        ];
 
         function selectAvatar(imageName, element) {
             selectedAvatarImg = imageName;
-            // Remove a classe 'selected' de todos os avatares
             document.querySelectorAll('.avatar-option').forEach(img => {
                 img.classList.remove('selected');
             });
-            // Adiciona no clicado
             element.classList.add('selected');
         }
 
         function criarSala() {
             const nick = document.getElementById("nickname").value.trim();
             const nomeSala = document.getElementById("roomNameInput").value.trim();
+            
             if (!nick || !nomeSala) {
                 alert("Preencha seu nick e o nome da sala!");
                 return;
             }
             currentUser = nick;
-            currentRoom = nomeSala;
 
-            // Sorteia um caso
-            currentCase = casosBanco[Math.floor(Math.random() * casosBanco.length)];
-            
-            preencherCaso(currentCase);
-            mudarTela("screen-case");
+            // Envia o pedido para o servidor criar a sala no MongoDB
+            socket.emit('criar_sala', { nomeSala, nick });
         }
+
+        // Resposta do servidor quando a sala é criada com sucesso
+        socket.on('sala_criada', ({ nomeSala, caso, papel }) => {
+            currentRoom = nomeSala;
+            currentCase = caso;
+            meuPapel = papel;
+            
+            preencherCaso(caso);
+            mudarTela("screen-case");
+        });
+
+        // Atualiza dinamicamente a lista de salas vindas do MongoDB
+        socket.on('atualizar_salas', (salas) => {
+            const roomListDiv = document.getElementById("roomList");
+            roomListDiv.innerHTML = "";
+
+            if (Object.keys(salas).length === 0) {
+                roomListDiv.innerHTML = "<p style='color: var(--system-text); font-size: 0.85rem;'>Nenhuma sala ativa no momento.</p>";
+                return;
+            }
+
+            for (let nomeSala in salas) {
+                const dadosSala = salas[nomeSala];
+                const item = document.createElement("div");
+                item.className = "room-item";
+                item.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px; margin-bottom: 8px; border-radius: 6px;";
+                
+                item.innerHTML = `
+                    <span style="color: #fff;">${nomeSala} (Criador: ${dadosSala.criador})</span>
+                    <button onclick="entrarNaSala('${nomeSala}')" style="padding: 6px 12px; cursor: pointer;">Entrar (${dadosSala.jogadores.length}/2)</button>
+                `;
+                roomListDiv.appendChild(item);
+            }
+        });
+
+        function entrarNaSala(nomeSala) {
+            const nick = document.getElementById("nickname").value.trim();
+            if (!nick) {
+                alert("Digite seu nickname no campo acima antes de entrar!");
+                return;
+            }
+            currentUser = nick;
+            socket.emit('entrar_sala', { nomeSala, nick });
+        }
+
+        // Resposta quando entra em uma sala existente
+        socket.on('entrou_na_sala', ({ nomeSala, caso, papel }) => {
+            currentRoom = nomeSala;
+            currentCase = caso;
+            meuPapel = papel;
+
+            preencherCaso(caso);
+            mudarTela("screen-case");
+        });
+
+        socket.on('erro', (mensagem) => {
+            alert(mensagem);
+        });
 
         function preencherCaso(caso) {
             document.getElementById("themeTitle").innerText = caso.tema;
@@ -119,10 +165,19 @@
 
         function irParaChat() {
             mudarTela("screen-chat");
-            document.getElementById("chatRoomTitle").innerText = `Sala: ${currentRoom} — Tema: ${currentCase.tema}`;
+            document.getElementById("chatRoomTitle").innerText = `Sala: ${currentRoom} — ${currentCase.titulo}`;
             
-            // Inicia o diálogo automático dos bots
-            iniciarBotsJulgamento();
+            const badge = document.getElementById("papelBadge");
+            if (meuPapel === 'defesa') {
+                badge.innerText = "Você é a DEFESA (🟢 Verde)";
+            } else if (meuPapel === 'acusacao') {
+                badge.innerText = "Você é a ACUSAÇÃO (🔴 Vermelho)";
+            } else {
+                badge.innerText = "Você é um ESPECTADOR (⚖️)";
+            }
+
+            document.getElementById("chatMessages").innerHTML = "";
+            adicionarMensagemChat("Sistema", "Sessão aberta. O tribunal está em ordem.", "juiz");
         }
 
         function adicionarMensagemChat(autor, texto, tipo) {
@@ -131,7 +186,6 @@
             
             if (tipo === 'defesa') {
                 div.className = "message msg-defesa";
-                // Inclui a foto de perfil escolhida pelo jogador ao lado da mensagem dele
                 div.innerHTML = `
                     <img src="${selectedAvatarImg}" alt="Avatar" class="chat-avatar">
                     <div class="chat-text-content"><strong>🟢 [Defesa] ${autor}:</strong> ${texto}</div>
@@ -139,12 +193,12 @@
             } else if (tipo === 'acusacao') {
                 div.className = "message msg-acusacao";
                 div.innerHTML = `
-                    <div class="chat-text-content"><strong>🔴 [Acusação (Bot)]:</strong> ${texto}</div>
+                    <div class="chat-text-content"><strong>🔴 [Acusação] ${autor}:</strong> ${texto}</div>
                 `;
-            } else if (tipo === 'juiz') {
+            } else {
                 div.className = "message msg-juiz";
                 div.innerHTML = `
-                    <div class="chat-text-content"><strong>⚖️ [Juiz (Bot)]:</strong> ${texto}</div>
+                    <div class="chat-text-content"><strong>⚖️ [Sistema/Juiz]:</strong> ${texto}</div>
                 `;
             }
 
@@ -152,47 +206,30 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function iniciarBotsJulgamento() {
-            const chatMessages = document.getElementById("chatMessages");
-            chatMessages.innerHTML = "";
-
-            setTimeout(() => {
-                adicionarMensagemChat("Sistema", "Sessão aberta. O tribunal está em ordem.", "juiz");
-            }, 500);
-
-            setTimeout(() => {
-                adicionarMensagemChat("Juiz", "Sejam bem-vindos. Vamos iniciar a análise do caso: " + currentCase.titulo + ". Com a palavra, a Acusação.", "juiz");
-            }, 1800);
-
-            setTimeout(() => {
-                adicionarMensagemChat("Acusação", "Excelência, as provas demonstram claramente a culpa. Os fatos falam por si e exigem uma punição exemplar!", "acusacao");
-            }, 3500);
-
-            setTimeout(() => {
-                adicionarMensagemChat("Juiz", `Compreendido. Com a palavra agora a Defesa (${currentUser}), para expor seus argumentos.`, "juiz");
-            }, 5000);
-        }
-
         function enviarMensagem() {
             const input = document.getElementById("userInput");
             const texto = input.value.trim();
             if (!texto) return;
 
-            // Envia a mensagem do usuário (Defesa - Verde)
-            adicionarMensagemChat(currentUser, texto, 'defesa');
-            input.value = "";
+            // Envia a mensagem via Socket.io para todos na mesma sala no servidor
+            socket.emit('enviar_mensagem', { 
+                nomeSala: currentRoom, 
+                nick: currentUser, 
+                texto, 
+                papel: meuPapel 
+            });
 
-            // Resposta automática do Juiz após o jogador argumentar
-            setTimeout(() => {
-                const respostasJuiz = [
-                    "Argumento registrado pela Defesa. A promotoria deseja contra-argumentar?",
-                    "O tribunal anotou a ponderação da Defesa. Prossiga com suas alegações.",
-                    "Interessante perspectiva apresentada pela Defesa. Vamos ouvir os desdobramentos."
-                ];
-                const respostaAleatoria = respostasJuiz[Math.floor(Math.random() * respostasJuiz.length)];
-                adicionarMensagemChat("Juiz", respostaAleatoria, "juiz");
-            }, 1500);
+            input.value = "";
         }
+
+        // Recebe mensagens em tempo real enviadas por qualquer dispositivo na sala
+        socket.on('receber_mensagem', ({ nick, texto, papel }) => {
+            adicionarMensagemChat(nick, texto, papel);
+        });
+
+        socket.on('mensagem_sistema', (aviso) => {
+            adicionarMensagemChat("Sistema", aviso, "juiz");
+        });
 
         function handleKeyPress(event) {
             if (event.key === 'Enter') enviarMensagem();
