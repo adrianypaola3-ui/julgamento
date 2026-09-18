@@ -3,242 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de Julgamento - Tribunal</title>
     <link rel="stylesheet" href="index.css">
-    <title>⚖️ Tribunal Virtual — Julgamento Online</title>
 </head>
 <body>
 
     <div class="container">
-        <!-- TELA 1: MENU -->
-        <div id="screen-menu" class="screen active">
-            <h1>Tribunal Virtual</h1>
-            <input type="text" id="nickname" placeholder="Digite seu Nickname..." autocomplete="off">
-            <input type="text" id="roomNameInput" placeholder="Nome da Sala a criar..." autocomplete="off">
+        
+        <!-- TELA DE LOGIN -->
+        <div id="tela-login" class="screen active">
+            <div class="logo-area">
+                <div class="titulo-container">
+                    <span class="icon-scale">⚖️</span>
+                    <h2>TRIBUNAL DE JUSTIÇA</h2>
+                    <span class="icon-scale">⚖️</span>
+                </div>
+                <p>Acesse sua conta para participar dos julgamentos</p>
+            </div>
+
+            <div class="form-group">
+                <label>Usuário:</label>
+                <input type="text" id="login-usuario" placeholder="Digite seu usuário">
+            </div>
+
+            <div class="form-group">
+                <label>Senha:</label>
+                <input type="password" id="login-senha" placeholder="Digite sua senha">
+            </div>
+
+            <button id="btn-fazer-login" class="btn-primary">Entrar no Tribunal</button>
             
-            <!-- SELEÇÃO DE AVATAR (FOTO DE PERFIL) -->
-            <div class="profile-selection">
-                <p style="font-size: 0.9rem; color: var(--system-text); margin-bottom: 8px;">Escolha seu Personagem:</p>
-                <div class="avatar-grid">
-                    <img src="icone-1.png" alt="Personagem 1" class="avatar-option selected" onclick="selectAvatar('icone-1.png', this)">
-                    <img src="icone-2.png" alt="Personagem 2" class="avatar-option" onclick="selectAvatar('icone-2.png', this)">
-                    <img src="icone-3.png" alt="Personagem 3" class="avatar-option" onclick="selectAvatar('icone-3.png', this)">
-                    <img src="icone-4.png" alt="Personagem 4" class="avatar-option" onclick="selectAvatar('icone-4.png', this)">
-                    <img src="icone-5.png" alt="Personagem 5" class="avatar-option" onclick="selectAvatar('icone-5.png', this)">
+            <p class="switch-text">Não tem uma conta? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
+        </div>
+
+        <!-- TELA DE CADASTRO -->
+        <div id="tela-cadastro" class="screen" style="display: none;">
+            <div class="logo-area">
+                <div class="titulo-container">
+                    <span class="icon-scale">⚖️</span>
+                    <h2>NOVO CADASTRO</h2>
+                    <span class="icon-scale">⚖️</span>
+                </div>
+                <p>Crie sua credencial de acesso</p>
+            </div>
+
+            <div class="form-group">
+                <label>Escolha um Usuário:</label>
+                <input type="text" id="cad-usuario" placeholder="Nome de usuário">
+            </div>
+
+            <div class="form-group">
+                <label>Escolha uma Senha:</label>
+                <input type="password" id="cad-senha" placeholder="Sua senha secreta">
+            </div>
+
+            <button id="btn-fazer-cadastro" class="btn-primary">Concluir Cadastro</button>
+            
+            <p class="switch-text">Já possui uma conta? <a href="#" onclick="mostrarLogin()">Faça login</a></p>
+        </div>
+
+        <!-- TELA DE CRIAÇÃO / ENTRADA EM SALA -->
+        <div id="tela-criacao-sala" class="screen" style="display: none;">
+            <div class="logo-area" style="margin-bottom: 15px;">
+                <div class="titulo-container">
+                    <span class="icon-scale">⚖️</span>
+                    <h2>SALA DE JULGAMENTO</h2>
+                    <span class="icon-scale">⚖️</span>
+                </div>
+                <p>Olá, <span id="span-usuario-logado" style="color: var(--accent-gold);"></span>!</p>
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="input-nome-sala" placeholder="Nome da Sala (ex: SalaDoJuri)">
+            </div>
+
+            <!-- SELEÇÃO DE TEMAS SORTEADOS -->
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-line); padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label class="label-info" style="margin-bottom: 0;">ESCOLHA 1 ENTRE OS 2 TEMAS SORTEADOS:</label>
+                    <button id="btn-ressortear" type="button" style="width: auto; padding: 4px 10px; font-size: 0.75rem; background: var(--accent-gold); color: #000; margin-bottom: 0; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔄 Outros Temas</button>
+                </div>
+                <div id="container-opcoes-temas" style="display: flex; flex-direction: column; gap: 8px;">
+                    <p style="color: var(--system-text); font-size: 0.85rem; text-align: center;">Carregando opções de temas...</p>
                 </div>
             </div>
 
-            <button onclick="criarSala()">Criar Nova Sala</button>
-            
-            <p style="margin: 25px 0 10px 0; font-size: 0.9rem; color: var(--system-text);">Salas Disponíveis:</p>
-            <div class="room-list" id="roomList"></div>
-        </div>
-
-        <!-- TELA 2: CASO -->
-        <div id="screen-case" class="screen">
-            <h2>Cenário do Caso</h2>
-            <div class="case-box">
-                <span class="label-info">Tema Central:</span>
-                <h3 id="themeTitle"></h3>
-                
-                <span class="label-info" style="margin-top: 15px;">Título do Cenário:</span>
-                <h4 id="caseTitle"></h4>
-                
-                <span class="label-info" style="margin-top: 15px;">Descrição Completa:</span>
-                <p id="caseDescription"></p>
+            <div class="form-group">
+                <label>MÁXIMO DE PARTICIPANTES (3 a 9):</label>
+                <select id="select-max-jogadores">
+                    <option value="3">3 Jogadores</option>
+                    <option value="5">5 Jogadores</option>
+                    <option value="9" selected>9 Jogadores (Máximo)</option>
+                </select>
             </div>
-            <button onclick="irParaChat()">Iniciar Julgamento</button>
-        </div>
 
-        <!-- TELA 3: CHAT MULTIPLAYER -->
-        <div id="screen-chat" class="screen">
-            <h2 id="chatRoomTitle" style="font-size: 1.1rem; margin-bottom: 5px; text-align: center;"></h2>
-            <div class="papel-badge" id="papelBadge">Conectando...</div>
-            
-            <div class="chat-container">
-                <div class="chat-messages" id="chatMessages"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="userInput" placeholder="Digite sua mensagem..." autocomplete="off" onkeypress="handleKeyPress(event)">
-                    <button onclick="enviarMensagem()">Enviar</button>
+            <button id="btn-entrar-sala" class="btn-primary">CRIAR OU ENTRAR NA SALA</button>
+
+            <div style="margin-top: 20px;">
+                <label class="label-info">SALAS DISPONÍVEIS NO TRIBUNAL:</label>
+                <div id="lista-salas" style="max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid var(--border-line); border-radius: 6px; padding: 8px;">
+                    <p style="text-align: center; color: var(--system-text); font-size: 0.9rem; padding: 10px;">Nenhuma sala ativa no momento.</p>
                 </div>
             </div>
         </div>
+
+        <!-- TELA DO TRIBUNAL / SALA -->
+        <div id="tela-sala" class="screen" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-line); padding-bottom: 10px; margin-bottom: 12px;">
+                <div>
+                    <h3 id="span-tema-caso" style="color: var(--accent-gold); font-size: 1.1rem; margin: 0;">Caso em Julgamento</h3>
+                    <span id="meu-papel-span" style="font-size: 0.8rem; color: #aaa;">Seu Papel: Carregando...</span>
+                </div>
+                <button id="btn-encerrar-caso" style="width: auto; padding: 6px 10px; font-size: 0.75rem; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Sair / Encerrar</button>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-line); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                <strong style="font-size: 0.85rem; color: #fff; display: block; margin-bottom: 3px;">📜 Resumo dos Fatos:</strong>
+                <span id="span-historinha-texto" style="font-size: 0.82rem; color: #ccc; line-height: 1.3; display: block;">Carregando os fatos do caso...</span>
+            </div>
+
+            <div id="caixa-mensagens" style="height: 220px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border-line); border-radius: 6px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px;">
+                <div class="message" style="color: var(--system-text); text-align: center; font-size: 0.85rem;">Sessão iniciada. O julgamento vai começar.</div>
+            </div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                <input type="text" id="input-chat" placeholder="Escreva sua argumentação..." style="margin-bottom: 0;">
+                <button id="btn-enviar-chat" style="width: auto; padding: 0 15px; margin-bottom: 0;" class="btn-primary">Enviar</button>
+            </div>
+
+            <div id="painel-veredito" class="escondido" style="background: rgba(212,175,55,0.1); border: 1px solid var(--accent-gold); padding: 10px; border-radius: 6px;">
+                <label style="color: var(--accent-gold); font-size: 0.85rem; display: block; margin-bottom: 5px;">⚖️ Emitir Veredito Final (Exclusivo do Juiz):</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="input-veredito" placeholder="Ex: Réu condenado por unanimidade..." style="margin-bottom: 0;">
+                    <button id="btn-emitir-veredito" style="width: auto; padding: 0 12px; background: var(--accent-gold); color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Emitir</button>
+                </div>
+            </div>
+
+            <div id="painel-testemunha" class="escondido" style="background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; padding: 10px; border-radius: 6px;">
+                <label style="color: #60a5fa; font-size: 0.85rem; display: block; margin-bottom: 5px;">🗣️ Painel de Testemunho:</label>
+                <span id="status-testemunha-aviso" style="font-size: 0.8rem; color: #f59e0b; display: block; margin-bottom: 6px;">🔒 Aguarde ser chamado no chat para responder.</span>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="input-depoimento" placeholder="Digite sua resposta/depoimento..." disabled style="margin-bottom: 0; opacity: 0.6;">
+                    <button id="btn-enviar-depoimento" disabled style="width: auto; padding: 0 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; opacity: 0.5; cursor: not-allowed;">Responder</button>
+                </div>
+            </div>
+
+            <div id="painel-advogado" class="escondido" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-line); padding: 8px; border-radius: 6px; text-align: center;">
+                <span style="font-size: 0.8rem; color: var(--system-text);">💡 Dica: Use o chat acima para intervir, interrogar testemunhas e apresentar provas.</span>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Importação obrigatória do Socket.io do Servidor -->
     <script src="/socket.io/socket.io.js"></script>
-
-    <!-- Script de Integração com Servidor e Banco de Dados -->
-    <script>
-        const socket = io();
-
-        let currentUser = "";
-        let currentRoom = "";
-        let currentCase = {};
-        let meuPapel = "";
-        let selectedAvatarImg = "icone-1.png"; // Avatar padrão inicial
-
-        function selectAvatar(imageName, element) {
-            selectedAvatarImg = imageName;
-            document.querySelectorAll('.avatar-option').forEach(img => {
-                img.classList.remove('selected');
-            });
-            element.classList.add('selected');
-        }
-
-        function criarSala() {
-            const nick = document.getElementById("nickname").value.trim();
-            const nomeSala = document.getElementById("roomNameInput").value.trim();
-            
-            if (!nick || !nomeSala) {
-                alert("Preencha seu nick e o nome da sala!");
-                return;
-            }
-            currentUser = nick;
-
-            // Envia o pedido para o servidor criar a sala no MongoDB
-            socket.emit('criar_sala', { nomeSala, nick });
-        }
-
-        // Resposta do servidor quando a sala é criada com sucesso
-        socket.on('sala_criada', ({ nomeSala, caso, papel }) => {
-            currentRoom = nomeSala;
-            currentCase = caso;
-            meuPapel = papel;
-            
-            preencherCaso(caso);
-            mudarTela("screen-case");
-        });
-
-        // Atualiza dinamicamente a lista de salas vindas do MongoDB
-        socket.on('atualizar_salas', (salas) => {
-            const roomListDiv = document.getElementById("roomList");
-            roomListDiv.innerHTML = "";
-
-            if (Object.keys(salas).length === 0) {
-                roomListDiv.innerHTML = "<p style='color: var(--system-text); font-size: 0.85rem;'>Nenhuma sala ativa no momento.</p>";
-                return;
-            }
-
-            for (let nomeSala in salas) {
-                const dadosSala = salas[nomeSala];
-                const item = document.createElement("div");
-                item.className = "room-item";
-                item.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px; margin-bottom: 8px; border-radius: 6px;";
-                
-                item.innerHTML = `
-                    <span style="color: #fff;">${nomeSala} (Criador: ${dadosSala.criador})</span>
-                    <button onclick="entrarNaSala('${nomeSala}')" style="padding: 6px 12px; cursor: pointer;">Entrar (${dadosSala.jogadores.length}/2)</button>
-                `;
-                roomListDiv.appendChild(item);
-            }
-        });
-
-        function entrarNaSala(nomeSala) {
-            const nick = document.getElementById("nickname").value.trim();
-            if (!nick) {
-                alert("Digite seu nickname no campo acima antes de entrar!");
-                return;
-            }
-            currentUser = nick;
-            socket.emit('entrar_sala', { nomeSala, nick });
-        }
-
-        // Resposta quando entra em uma sala existente
-        socket.on('entrou_na_sala', ({ nomeSala, caso, papel }) => {
-            currentRoom = nomeSala;
-            currentCase = caso;
-            meuPapel = papel;
-
-            preencherCaso(caso);
-            mudarTela("screen-case");
-        });
-
-        socket.on('erro', (mensagem) => {
-            alert(mensagem);
-        });
-
-        function preencherCaso(caso) {
-            document.getElementById("themeTitle").innerText = caso.tema;
-            document.getElementById("caseTitle").innerText = caso.titulo;
-            document.getElementById("caseDescription").innerText = caso.texto;
-        }
-
-        function irParaChat() {
-            mudarTela("screen-chat");
-            document.getElementById("chatRoomTitle").innerText = `Sala: ${currentRoom} — ${currentCase.titulo}`;
-            
-            const badge = document.getElementById("papelBadge");
-            if (meuPapel === 'defesa') {
-                badge.innerText = "Você é a DEFESA (🟢 Verde)";
-            } else if (meuPapel === 'acusacao') {
-                badge.innerText = "Você é a ACUSAÇÃO (🔴 Vermelho)";
-            } else {
-                badge.innerText = "Você é um ESPECTADOR (⚖️)";
-            }
-
-            document.getElementById("chatMessages").innerHTML = "";
-            adicionarMensagemChat("Sistema", "Sessão aberta. O tribunal está em ordem.", "juiz");
-        }
-
-        function adicionarMensagemChat(autor, texto, tipo) {
-            const chatMessages = document.getElementById("chatMessages");
-            const div = document.createElement("div");
-            
-            if (tipo === 'defesa') {
-                div.className = "message msg-defesa";
-                div.innerHTML = `
-                    <img src="${selectedAvatarImg}" alt="Avatar" class="chat-avatar">
-                    <div class="chat-text-content"><strong>🟢 [Defesa] ${autor}:</strong> ${texto}</div>
-                `;
-            } else if (tipo === 'acusacao') {
-                div.className = "message msg-acusacao";
-                div.innerHTML = `
-                    <div class="chat-text-content"><strong>🔴 [Acusação] ${autor}:</strong> ${texto}</div>
-                `;
-            } else {
-                div.className = "message msg-juiz";
-                div.innerHTML = `
-                    <div class="chat-text-content"><strong>⚖️ [Sistema/Juiz]:</strong> ${texto}</div>
-                `;
-            }
-
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function enviarMensagem() {
-            const input = document.getElementById("userInput");
-            const texto = input.value.trim();
-            if (!texto) return;
-
-            // Envia a mensagem via Socket.io para todos na mesma sala no servidor
-            socket.emit('enviar_mensagem', { 
-                nomeSala: currentRoom, 
-                nick: currentUser, 
-                texto, 
-                papel: meuPapel 
-            });
-
-            input.value = "";
-        }
-
-        // Recebe mensagens em tempo real enviadas por qualquer dispositivo na sala
-        socket.on('receber_mensagem', ({ nick, texto, papel }) => {
-            adicionarMensagemChat(nick, texto, papel);
-        });
-
-        socket.on('mensagem_sistema', (aviso) => {
-            adicionarMensagemChat("Sistema", aviso, "juiz");
-        });
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') enviarMensagem();
-        }
-
-        function mudarTela(id) {
-            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-            document.getElementById(id).classList.add("active");
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
