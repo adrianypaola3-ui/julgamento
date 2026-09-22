@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // CONEXÃO COM O MONGODB
-const MONGO_URI = "mongodb+srv://adrianypaola3_db_user:garnica3456@cluster0.ucjygfm.mongodb.net/?appName=Cluster0" || 'mongodb://localhost:27017/sala-julgamento';
+const MONGO_URI = chave_API || 'mongodb://localhost:27017/sala-julgamento';
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('Conectado ao MongoDB com sucesso!'))
