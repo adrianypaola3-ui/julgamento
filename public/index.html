@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de Julgamento - Tribunal</title>
+    <link rel="stylesheet" href="index.css?v=3">
+</head>
+<body>
+    <div class="container">
+        <!-- TELA DE LOGIN -->
+        <div id="tela-login" class="screen active">
+            <div class="logo-area">
+                <div class="titulo-container">
+                    <span class="icon-scale">⚖️</span>
+                    <h2>TRIBUNAL DE JUSTIÇA</h2>
+                    <span class="icon-scale">⚖️</span>
+                </div>
+                <p>Acesse sua conta para participar dos julgamentos</p>
+            </div>
+            <div class="form-group">
+                <label>Usuário:</label>
+                <input type="text" id="login-usuario" placeholder="Digite seu usuário">
+            </div>
+            <div class="form-group">
+                <label>Senha:</label>
+                <input type="password" id="login-senha" placeholder="Digite sua senha">
+            </div>
+            <button type="button" id="btn-fazer-login" class="btn-primary">Entrar no Tribunal</button>
+            <p class="switch-text">Não tem uma conta? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
+        </div>
+
+        <!-- TELA DE CADASTRO -->
+        <div id="tela-cadastro" class="screen" style="display: none;">
+            <div class="logo-area">
+                <div class="titulo-container">
+                    <span class="icon-scale">⚖️</span>
+                    <h2>NOVO CADASTRO</h2>
+                    <span class="icon-scale">⚖️</span>
+                </div>
+                <p>Crie sua credencial de acesso</p>
+            </div>
+            <div class="form-group">
+                <label>Escolha um Usuário:</label>
+                <input type="text" id="cad-usuario" placeholder="Nome de usuário">
+            </div>
+            <div class="form-group">
+                <label>Escolha uma Senha:</label>
+                <input type="password" id="cad-senha" placeholder="Sua senha secreta">
+            </div>
+            <button type="button" id="btn-fazer-cadastro" class="btn-primary">Concluir Cadastro</button>
+            <p class="switch-text">Já possui uma conta? <a href="#" onclick="mostrarLogin()">Faça login</a></p>
+        </div>
+
+        <!-- TELA DE CRIAÇÃO / ENTRADA EM SALA -->
+        <div id="tela-criacao-sala" class="screen" style="display: none;">
+            <div class="logo-area" style="margin-bottom: 15px;">
+                <div class="titulo-container">
+                    <span class="icon-scale">⚖️</span>
+                    <h2>SALA DE JULGAMENTO</h2>
+                    <span class="icon-scale">⚖️</span>
+                </div>
+                <p>Olá, <span id="span-usuario-logado" style="color: var(--accent-gold);"></span>!</p>
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="input-nome-sala" placeholder="Nome da Sala (ex: SalaDoJuri)">
+            </div>
+
+            <!-- CASOS SORTEADOS -->
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-line); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label class="label-info" style="margin-bottom: 0;">CASOS DISPONÍVEIS:</label>
+                    <button id="btn-ressortear" type="button" style="width: auto; padding: 4px 8px; font-size: 0.75rem; background: var(--accent-gold); color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Carregar outros casos</button>
+                </div>
+                <div id="container-opcoes-temas" style="display: flex; flex-direction: column; gap: 6px;">
+                    <p style="color: var(--system-text); font-size: 0.8rem; text-align: center;">Carregando casos...</p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>MÁXIMO DE PARTICIPANTES (3 a 9):</label>
+                <select id="select-max-jogadores">
+                    <option value="3">3 Jogadores</option>
+                    <option value="5">5 Jogadores</option>
+                    <option value="9" selected>9 Jogadores</option>
+                </select>
+            </div>
+
+            <!-- OPÇÃO DO JUIZ IA (BOT) -->
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; background: rgba(212,175,55,0.05); padding: 8px; border-radius: 6px; border: 1px dashed var(--accent-gold);">
+                <input type="checkbox" id="check-juiz-ia" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="check-juiz-ia" style="cursor: pointer; color: var(--accent-gold); font-size: 0.85rem; font-weight: bold; margin-bottom: 0;">
+                    🤖 Usar Juiz Inteligente 🤖
+                </label>
+            </div>
+
+            <button type="button" id="btn-entrar-sala" class="btn-primary">CRIAR SALA</button>
+
+            <div style="margin-top: 15px;">
+                <label class="label-info">SALAS DISPONÍVEIS:</label>
+                <div id="lista-salas" style="max-height: 100px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid var(--border-line); border-radius: 6px; padding: 6px;">
+                    <p style="text-align: center; color: var(--system-text); font-size: 0.8rem; padding: 6px;">Nenhuma sala ativa.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA DO TRIBUNAL / SALA -->
+        <div id="tela-sala" class="screen" style="display: none; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-line); padding-bottom: 8px; margin-bottom: 10px;">
+                <div>
+                    <h3 id="span-tema-caso" style="color: var(--accent-gold); font-size: 1rem; margin: 0;">Caso em Julgamento</h3>
+                    <span id="meu-papel-span" style="font-size: 0.75rem; color: #aaa;">Seu Papel: Carregando...</span>
+                </div>
+                <button type="button" id="btn-sair-sala" style="width: auto; padding: 5px 8px; font-size: 0.75rem; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Sair</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); border: 1px solid var(--border-line); padding: 8px; border-radius: 6px; margin-bottom: 8px;">
+                <div>
+                    <strong style="font-size: 0.8rem; color: #fff; display: block; margin-bottom: 2px;">📜 Fatos:</strong>
+                    <span id="span-historinha-texto" style="font-size: 0.78rem; color: #ccc; line-height: 1.2; display: block;">Carregando...</span>
+                </div>
+                <div style="text-align: right; min-width: 100px; padding-left: 8px;">
+                    <span style="font-size: 0.75rem; color: #aaa; display: block;">⏱️ Tempo:</span>
+                    <span id="timer-sessao" style="font-size: 0.95rem; color: var(--accent-gold); font-weight: bold;">08:00</span>
+                </div>
+            </div>
+
+           <div id="caixa-mensagens" style="height: 250px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border-line); border-radius: 6px; padding: 10px; margin-bottom: 8px; box-sizing: border-box;">
+               <div class="message sistema-msg" style="color: var(--system-text); font-size: 0.8rem;">Sessão iniciada.</div>
+           </div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <input type="text" id="input-chat" placeholder="Escreva sua argumentação..." style="margin-bottom: 0; font-size: 0.85rem; padding: 6px;">
+                <button type="button" id="btn-enviar-chat" style="width: auto; padding: 0 12px; margin-bottom: 0; font-size: 0.8rem;" class="btn-primary">Enviar</button>
+            </div>
+
+            <div id="painel-veredito" style="background: rgba(212,175,55,0.1); border: 1px solid var(--accent-gold); padding: 8px; border-radius: 6px; display: none;">
+                <label style="color: var(--accent-gold); font-size: 0.8rem; display: block; margin-bottom: 4px;">⚖️ Decisão do Juiz (Veredito Final):</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="input-veredito" placeholder="Digite o veredito final..." style="margin-bottom: 0; font-size: 0.8rem; padding: 6px;">
+                    <button type="button" id="btn-emitir-veredito" style="width: auto; padding: 0 10px; background: var(--accent-gold); color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;">Emitir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
